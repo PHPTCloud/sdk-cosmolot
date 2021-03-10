@@ -11,9 +11,9 @@ use Cosmolot\Exceptions\InvalidRequestException;
 /**
  * Initialization params
  */
-const DOMAIN = 'samuraipartners.com';
-const LOGIN = 'm.margera@alflaeads.net';
-const PASSWORD = 'Alfaleads123';
+const DOMAIN = '';
+const LOGIN = '';
+const PASSWORD = '';
 /**
  * Client initialization by 
  * - domain name

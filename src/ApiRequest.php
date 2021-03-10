@@ -20,12 +20,7 @@ class ApiRequest
     /**
      * @var string
      */
-    protected const LOGIN_METHOD = '/api/client/partner/sign_in';
-    /**
-     *
-     * @var string
-     */
-    protected const LOGIN_PAGE_URL = '/partner/login';
+    protected const LOGIN_METHOD = '/users/login';
 
     /**
      * @var string
