@@ -1,0 +1,12 @@
+{
+    "name": "phptcloud/sdkcosmolot",
+    "require": {
+        "illuminate/support": "^8.30",
+        "illuminate/http": "^8.30"
+    },
+    "autoload": {
+        "psr-4": {
+            "Cosmolot\\": "src/"
+        }
+    }
+}
