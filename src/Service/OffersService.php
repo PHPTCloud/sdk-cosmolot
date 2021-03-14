@@ -27,7 +27,27 @@ class OffersService extends AbstractService implements AbstractServiceContract
      */
     public function getOne(int $id): ?OfferModel
     {
-        return new OfferModel();
+        $result = new OfferModel();
+        if($this->getRequest()->authentication())
+        {
+            $response = $this->getRequest()->get(
+                $this->getMethod() . '?promo_id=' . $id
+            );
+            $document = new DomQuery($response);
+            $offers = $document->find('promo-archive');
+
+            if($offers->count())
+            {
+                $offers = json_decode($document->find('promo-archive')->getAttribute(':items'));
+                foreach($offers as $offer)
+                {
+                    $result->fromArray((array) $offer);
+                    break;
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**

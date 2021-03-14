@@ -26,8 +26,8 @@ $client = new ApiClient(DOMAIN, LOGIN, PASSWORD);
  */
 try
 {
-    $offerId = 127834;
-    $offers = $client->offers()->get();
+    $offerId = 1;
+    $offers = $client->offers()->getOne($offerId);
     /**
      * Use offer object model
      */
