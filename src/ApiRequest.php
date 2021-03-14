@@ -69,7 +69,7 @@ class ApiRequest
      */
     public function setDomain(string $domain): self
     {
-        $this->domain = self::HTTP_SCHEME . '::/' . $domain;
+        $this->domain = $domain;
         return $this;
     }
 
