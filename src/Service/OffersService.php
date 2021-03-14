@@ -9,45 +9,49 @@ namespace Cosmolot\Service;
 
 use Cosmolot\Models\AbstractModel;
 use Cosmolot\Contracts\AbstractServiceContract;
+use Cosmolot\Exceptions\InvalidRequestException;
 use Cosmolot\Models\OfferModel;
+use Cosmolot\Models\OfferModelsCollection;
+use Rct567\DomQuery\DomQuery;
 
 class OffersService extends AbstractService implements AbstractServiceContract
 {
     /**
      * @var string
      */
-    protected $method = '/api/client/partner/campaigns';
+    protected $method = '/promo/materials';
 
     /**
      * @param int $id
      * @return OfferModel
      */
-    public function getOne(int $id): OfferModel
+    public function getOne(int $id): ?OfferModel
     {
-        $this->getRequest()->authentication();
-        $response = $this->getRequest()->get(
-            $this->getRequest()->getDomain($this->getMethod()) . '/' . $id
-        );
-        $response = json_decode($response);
-        $model = new OfferModel();
-
-        if(isset($response->id)) {
-            $model->fromArray([
-                'id' => $response->id,
-                'name' => $response->name,
-                'promos' => $response->promos,
-                'commission' => $response->commission,
-            ]);
-        }
-
-        return $model;
+        return new OfferModel();
     }
 
     /**
-     * @return OfferModel[]
+     * @return OfferModelsCollection
      */
-    public function get(): array
+    public function get(): OfferModelsCollection
     {
-        return [];
+        $result = new OfferModelsCollection([]);
+        if($this->getRequest()->authentication())
+        {
+            $response = $this->getRequest()->get($this->getMethod());
+            $document = new DomQuery($response);
+            $offers = $document->find('promo-archive');
+
+            if($offers->count())
+            {
+                $offers = json_decode($document->find('promo-archive')->getAttribute(':items'));
+                foreach($offers as $offer)
+                {
+                    $result->add((new OfferModel())->fromArray((array) $offer));
+                }
+            }
+        }
+
+        return $result;
     }
 }

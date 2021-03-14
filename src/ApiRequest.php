@@ -9,6 +9,7 @@ namespace Cosmolot;
 use Illuminate\Http\Response;
 use Cosmolot\Dictionaries\ChromeUserAgentsDictionary;
 use Cosmolot\Exceptions\InvalidRequestException;
+use Rct567\DomQuery\DomQuery;
 
 class ApiRequest
 {
@@ -16,6 +17,11 @@ class ApiRequest
      * @var string
      */
     private const HTTP_SCHEME = 'https';
+
+    /**
+     * @var string
+     */
+    protected const LOGIN_PAGE = '';
 
     /**
      * @var string
@@ -176,17 +182,50 @@ class ApiRequest
      */
     public function authentication(): bool
     {
-        $postParams = json_encode([
-            'partner_user' => [
-                'email' => $this->getLogin(),
-                'password' => $this->getPassword(),
-                'otp_attempt' => '',
-            ]
+        $postParams = implode('&', [
+            'login=' . $this->getLogin(),
+            'password=' . $this->getPassword(),
+            '_token=' . $this->getToken()
         ]);
 
-        $response = $this->post($this->getDomain(self::LOGIN_METHOD), $postParams);
-        $response = json_decode($response);
-        return (isset($response->email)) ? true : false;
+        try
+        {
+            $this->post(self::LOGIN_METHOD, $postParams);
+        }
+        catch(InvalidRequestException $e)
+        {
+            if($e->getHttpCode() === Response::HTTP_INTERNAL_SERVER_ERROR)
+            {
+                return true;
+            }
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getToken(): string
+    {
+        $token = '';
+        try
+        {
+            $response = $this->get(static::LOGIN_PAGE);
+            $document = new DomQuery($response);
+            $token = $document->find('[name="_token"]');
+            
+            if($token->count()) {
+                $token = $token->getAttribute('value');
+            }
+        }
+        catch(InvalidRequestException $e)
+        {
+            print_r($e);
+        }
+
+        return $token;
     }
 
     /**
@@ -203,7 +242,7 @@ class ApiRequest
          * * See below default headers
          */
         $defaultParams = [
-            CURLOPT_URL => $methodUrl,
+            CURLOPT_URL => $this->getDomain($methodUrl),
             CURLOPT_CUSTOMREQUEST => 'GET',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
@@ -235,10 +274,11 @@ class ApiRequest
     /**
      * @param string $methodUrl
      * @param array|string $queryParams
+     * @param array $params
      * @param bool $includeCookie
      * @return mixed
      */
-    public function post(string $methodUrl, $postFields = [], bool $includeCookie = true)
+    public function post(string $methodUrl, $postFields = [], array $params = [], bool $includeCookie = true)
     {
         /**
          * Prepare http params for request
@@ -246,14 +286,14 @@ class ApiRequest
          * * See below default headers
          */
         $defaultParams = [
-            CURLOPT_URL => $methodUrl,
+            CURLOPT_URL => $this->getDomain($methodUrl),
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => $postFields,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
+                'User-Agent: ' . ChromeUserAgentsDictionary::USER_AGENT_0,
             ],
         ];
         /**
@@ -293,34 +333,40 @@ class ApiRequest
             return $response;
         }
         else if($responseCode === Response::HTTP_NOT_FOUND) {
-            throw new InvalidRequestException(
-                'Request url:' . $params[CURLOPT_URL] . ': exception ' .
-                Response::$statusTexts[Response::HTTP_NOT_FOUND]
-            );
+            $exception = new InvalidRequestException('exception ' . Response::$statusTexts[Response::HTTP_NOT_FOUND]);
+            $exception->setHttpCode(Response::HTTP_NOT_FOUND);
+            $exception->setRequestUrl($params[CURLOPT_URL]);
+            throw $exception;
+        }
+        else if($responseCode === Response::HTTP_FORBIDDEN) {
+            $exception = new InvalidRequestException('exception ' . Response::$statusTexts[Response::HTTP_FORBIDDEN]);
+            $exception->setHttpCode(Response::HTTP_FORBIDDEN);
+            $exception->setRequestUrl($params[CURLOPT_URL]);
+            throw $exception;
         }
         else if($responseCode === Response::HTTP_BAD_REQUEST) {
-            throw new InvalidRequestException(
-                'Request url:' . $params[CURLOPT_URL] . ': exception ' .
-                Response::$statusTexts[Response::HTTP_BAD_REQUEST]
-            );
+            $exception = new InvalidRequestException('exception ' . Response::$statusTexts[Response::HTTP_BAD_REQUEST]);
+            $exception->setHttpCode(Response::HTTP_BAD_REQUEST);
+            $exception->setRequestUrl($params[CURLOPT_URL]);
+            throw $exception;
         }
         else if($responseCode === Response::HTTP_BAD_GATEWAY) {
-            throw new InvalidRequestException(
-                'Request url:' . $params[CURLOPT_URL] . ': exception ' .
-                Response::$statusTexts[Response::HTTP_BAD_GATEWAY]
-            );
+            $exception = new InvalidRequestException('exception ' . Response::$statusTexts[Response::HTTP_BAD_GATEWAY]);
+            $exception->setHttpCode(Response::HTTP_BAD_GATEWAY);
+            $exception->setRequestUrl($params[CURLOPT_URL]);
+            throw $exception;
         }
         else if($responseCode === Response::HTTP_INTERNAL_SERVER_ERROR) {
-            throw new InvalidRequestException(
-                'Request url:' . $params[CURLOPT_URL] . ': exception ' .
-                Response::$statusTexts[Response::HTTP_INTERNAL_SERVER_ERROR]
-            );
+            $exception = new InvalidRequestException('exception ' . Response::$statusTexts[Response::HTTP_INTERNAL_SERVER_ERROR]);
+            $exception->setHttpCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+            $exception->setRequestUrl($params[CURLOPT_URL]);
+            throw $exception;
         }
         else if($responseCode === Response::HTTP_METHOD_NOT_ALLOWED) {
-            throw new InvalidRequestException(
-                'Request url:' . $params[CURLOPT_URL] . ': exception ' .
-                Response::$statusTexts[Response::HTTP_METHOD_NOT_ALLOWED]
-            );
+            $exception = new InvalidRequestException('exception ' . Response::$statusTexts[Response::HTTP_METHOD_NOT_ALLOWED]);
+            $exception->setHttpCode(Response::HTTP_METHOD_NOT_ALLOWED);
+            $exception->setRequestUrl($params[CURLOPT_URL]);
+            throw $exception;
         }
 
         $this->closeConnection();

@@ -64,46 +64,9 @@ class OfferModel
         return $this;
     }
 
-    /**
-     * @return OffersLandingsModelsCollection|null
-     */
-    public function getLandings(): ?OffersLandingsModelsCollection
-    {
-        return $this->landings;
-    }
-
-    /**
-     * @param OffersLandingsModelsCollection $landings
-     * @return self
-     */
-    public function setLandings(OffersLandingsModelsCollection $landings): self
-    {
-        $this->landings = $landings;
-        return $this;
-    }
-
-    /**
-     * @return PaymentArgumentsModel|null
-     */
-    public function getCommission(): ?PaymentArgumentsModel
-    {
-        return $this->commission;
-    }
-
-    /**
-     * @param PaymentArgumentsModel $commission
-     * @return self
-     */
-    public function setCommission(PaymentArgumentsModel $commission): self
-    {
-        $this->commission = $commission;
-        return $this;
-    }
-
     public function __construct()
     {
-        $this->landings = new OffersLandingsModelsCollection();
-        $this->commission = [];
+        //
     }
 
     /**
@@ -114,8 +77,8 @@ class OfferModel
         return [
             'id' => $this->getId(),
             'title' => $this->getTitle(),
-            'landings' => $this->getLandings()->toArray(),
-            'payments' => $this->getCommission(),
+            'landings' => [],
+            'payments' => [],
         ];
     }
 
@@ -128,22 +91,8 @@ class OfferModel
         if(isset($array['id']))
             $this->setId((int) $array['id']);
 
-        if(isset($array['name']))
-            $this->setTitle($array['name']);
-
-        if(isset($array['promos']))
-            $array['promos'] = (array) $array['promos'];
-            $this->setLandings($this->getLandings()->fromArray($array['promos']));
-
-        if(isset($array['commission']))
-        {
-            $array['commission'] = (array) $array['commission'];
-            $paymentArguments = new PaymentArgumentsModel(
-                $array['commission']['title'],
-                $array['commission']['fiat_currency']
-            );
-            $this->setCommission($paymentArguments);
-        }
+        if(isset($array['code']))
+            $this->setTitle($array['code']);
 
         return $this;
     }

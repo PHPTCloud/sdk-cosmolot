@@ -27,15 +27,13 @@ $client = new ApiClient(DOMAIN, LOGIN, PASSWORD);
 try
 {
     $offerId = 127834;
-    $offer = $client->offers()->getOne($offerId);
+    $offers = $client->offers()->get();
     /**
      * Use offer object model
      */
-    print_r($offer);
-    /**
-     * ... or use as array
-     */
-    print_r($offer->toArray());
+    echo '<pre>';
+    print_r($offers);
+    echo '</pre>';
 }
 catch(InvalidRequestException $e)
 {

@@ -2,7 +2,8 @@
     "name": "phptcloud/sdkcosmolot",
     "require": {
         "illuminate/support": "^8.30",
-        "illuminate/http": "^8.30"
+        "illuminate/http": "^8.30",
+        "rct567/dom-query": "^0.8.0"
     },
     "autoload": {
         "psr-4": {
