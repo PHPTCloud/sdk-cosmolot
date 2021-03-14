@@ -28,17 +28,20 @@ class OffersService extends AbstractService implements AbstractServiceContract
     public function getOne(int $id): ?OfferModel
     {
         $result = new OfferModel();
+
         if($this->getRequest()->authentication())
         {
-            $response = $this->getRequest()->get(
-                $this->getMethod() . '?promo_id=' . $id
-            );
+            $method = $this->getMethod() . '?promo_id=' . $id;
+            $response = $this->getRequest()->get($method);
             $document = new DomQuery($response);
             $offers = $document->find('promo-archive');
 
             if($offers->count())
             {
-                $offers = json_decode($document->find('promo-archive')->getAttribute(':items'));
+                $offers = json_decode(
+                    $document->find('promo-archive')->getAttribute(':items')
+                );
+                
                 foreach($offers as $offer)
                 {
                     $result->fromArray((array) $offer);
@@ -46,7 +49,6 @@ class OffersService extends AbstractService implements AbstractServiceContract
                 }
             }
         }
-
         return $result;
     }
 
@@ -56,6 +58,7 @@ class OffersService extends AbstractService implements AbstractServiceContract
     public function get(): OfferModelsCollection
     {
         $result = new OfferModelsCollection([]);
+
         if($this->getRequest()->authentication())
         {
             $response = $this->getRequest()->get($this->getMethod());
@@ -64,14 +67,16 @@ class OffersService extends AbstractService implements AbstractServiceContract
 
             if($offers->count())
             {
-                $offers = json_decode($document->find('promo-archive')->getAttribute(':items'));
+                $offers = json_decode(
+                    $document->find('promo-archive')->getAttribute(':items')
+                );
+
                 foreach($offers as $offer)
                 {
                     $result->add((new OfferModel())->fromArray((array) $offer));
                 }
             }
         }
-
         return $result;
     }
 }
